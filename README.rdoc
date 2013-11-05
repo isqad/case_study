@@ -1,0 +1,5 @@
+= Case study of Ruby web-server
+
+== To run:
+
+  $ ruby test.rb
