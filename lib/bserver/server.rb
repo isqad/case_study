@@ -35,6 +35,8 @@ module Bserver
 
       socket = create_socket(addr)
 
+      info 'Runned'
+
       loop do
 
         client_socket, client_addrinfo = socket.accept
