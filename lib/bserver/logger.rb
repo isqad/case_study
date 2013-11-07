@@ -18,7 +18,7 @@ module Bserver
 
     def format_exception(ex)
       if ex.is_a?(Exception)
-        "#{arg.class}: #{arg.message}\n\t" <<
+        "#{ex.class}: #{ex.message}\n\t" <<
         ex.backtrace.join("\n\t") << "\n"
       elsif ex.respond_to?(:to_str)
         ex.to_str

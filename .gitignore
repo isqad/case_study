@@ -1,1 +1,4 @@
-log/
+log/*.log
+.bundle/
+vendor/bundle/
+!.gitkeep

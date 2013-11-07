@@ -17,7 +17,7 @@ module Bserver
     def handle
       @request.parse @socket
 
-      @response.body = @request.path
+      @response.body = File.open('/tmp/test-file.jpg', 'r')
     end
 
   end

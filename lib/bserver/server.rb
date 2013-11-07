@@ -2,11 +2,19 @@
 
 require 'webrick'
 
+# TODO: тут какие-то сорняки...
 require './lib/bserver/logger'
-
 require './lib/bserver/server_socket'
 require './lib/bserver/request_handler'
 
+=begin
+module WEBrick
+  # Public: MonkeyPatch - ускоряем отправку статики за счет внедрения sendfile(2) system call
+  class HTTPResponse
+    # TODO: зафигачить эту фичу
+  end
+end
+=end
 
 module Bserver
   # Public: класс отвечающий за запуск сервера
@@ -43,6 +51,7 @@ module Bserver
 
         client_socket, client_addrinfo = socket.accept
 
+        # TODO: это все фигня. Переделаем по-правильному
         pid = fork do
           begin
             # Обработка запроса
