@@ -3,10 +3,9 @@
 require 'webrick'
 
 require './lib/bserver/logger'
+
 require './lib/bserver/server_socket'
 require './lib/bserver/request_handler'
-
-require './lib/bserver/http_response'
 
 
 module Bserver
@@ -19,7 +18,12 @@ module Bserver
 
     def initialize
 
-      @response = HttpResponse.new
+      @response = WEBrick::HTTPResponse.new(
+        :Logger => self,
+        :HTTPVersion => '1.1',
+        :ServerSoftware => 'Bserver'
+      )
+
       @request = WEBrick::HTTPRequest.new(:Logger => self)
 
       $stdout.reopen("#{File.dirname(__FILE__)}/../../log/bserver_out.log")
@@ -35,8 +39,6 @@ module Bserver
 
       socket = create_socket(addr)
 
-      info 'Runned'
-
       loop do
 
         client_socket, client_addrinfo = socket.accept
@@ -45,16 +47,15 @@ module Bserver
           begin
             # Обработка запроса
             RequestHandler.new(client_socket, @request, @response).handle
-          rescue HttpException => e
+          rescue WEBrick::HTTPStatus::EOFError, WEBrick::HTTPStatus::RequestTimeout => e
             # Установить ошибку в response
-            if HttpResponse::HTTP_CODES.has_key?(e.message.to_i)
-              @response.set_error(e.message.to_i)
-            else
-              @response.set_error(500)
-            end
+            @response.set_error(e)
+          rescue WEBrick::HTTPStatus::Error => e
+            error(e)
+            @response.set_error(e)
           rescue => e
-            @response.set_error(500)
-            err e.class.name + ':' + e.message
+            error(e)
+            @response.set_error(e)
           ensure
             # при любых обстоятельствах сервер должен ответить
             @response.send_response(client_socket)
