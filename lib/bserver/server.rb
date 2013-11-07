@@ -50,9 +50,6 @@ module Bserver
           rescue WEBrick::HTTPStatus::EOFError, WEBrick::HTTPStatus::RequestTimeout => e
             # Установить ошибку в response
             @response.set_error(e)
-          rescue WEBrick::HTTPStatus::Error => e
-            error(e)
-            @response.set_error(e)
           rescue => e
             error(e)
             @response.set_error(e)
