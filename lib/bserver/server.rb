@@ -1,8 +1,7 @@
 # encoding: utf-8
 
-#require 'webrick/httprequest'
+require 'webrick'
 
-require './lib/bserver/http_request'
 require './lib/bserver/logger'
 require './lib/bserver/server_socket'
 require './lib/bserver/request_handler'
@@ -21,6 +20,7 @@ module Bserver
     def initialize
 
       @response = HttpResponse.new
+      @request = WEBrick::HTTPRequest.new(:Logger => self)
 
       $stdout.reopen("#{File.dirname(__FILE__)}/../../log/bserver_out.log")
       $stderr.reopen("#{File.dirname(__FILE__)}/../../log/bserver_err.log")
@@ -41,10 +41,8 @@ module Bserver
 
         pid = fork do
           begin
-            request = HttpRequest.new(client_socket)
-
             # Обработка запроса
-            RequestHandler.new(request, @response).handle
+            RequestHandler.new(client_socket, @request, @response).handle
           rescue HttpException => e
             # Установить ошибку в response
             if HttpResponse::HTTP_CODES.has_key?(e.message.to_i)
@@ -52,8 +50,9 @@ module Bserver
             else
               @response.set_error(500)
             end
-          rescue
+          rescue => e
             @response.set_error(500)
+            err e.class.name + ':' + e.message
           ensure
             # при любых обстоятельствах сервер должен ответить
             @response.send_response(client_socket)
