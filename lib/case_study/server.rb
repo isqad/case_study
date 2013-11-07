@@ -2,13 +2,13 @@
 
 require 'webrick'
 
-require './lib/bserver/logger'
+require './lib/case_study/logger'
 
-require './lib/bserver/server_socket'
-require './lib/bserver/request_handler'
+require './lib/case_study/server_socket'
+require './lib/case_study/request_handler'
 
 
-module Bserver
+module CaseStudy
   # Public: класс отвечающий за запуск сервера
   # данный сервер использует наипростейшую архитектуру -
   # каждый принятый запрос обрабатывается в отдельном процессе
@@ -49,9 +49,6 @@ module Bserver
             RequestHandler.new(client_socket, @request, @response).handle
           rescue WEBrick::HTTPStatus::EOFError, WEBrick::HTTPStatus::RequestTimeout => e
             # Установить ошибку в response
-            @response.set_error(e)
-          rescue WEBrick::HTTPStatus::Error => e
-            error(e)
             @response.set_error(e)
           rescue => e
             error(e)

@@ -2,7 +2,7 @@
 
 require 'socket'
 
-module Bserver
+module CaseStudy
   # Public: методы для создания сокета соединения
   # соединение может быть как через файл сокета (unix сокет),
   # так и через ip и порт (поддерживается IPv4 и IPv6)

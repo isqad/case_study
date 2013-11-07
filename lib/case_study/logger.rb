@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-module Bserver
+module CaseStudy
   # Public: предоставляет логирование
   module Logger
 
