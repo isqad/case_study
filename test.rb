@@ -1,3 +1,3 @@
-require './lib/bserver/server'
+require './lib/case_study/server'
 
-Bserver::Server.new.run('0.0.0.0:8080')
+CaseStudy::Server.new.run('0.0.0.0:8080')
