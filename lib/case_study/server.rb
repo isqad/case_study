@@ -22,7 +22,7 @@ module CaseStudy
     EXIT_SIGNALS = [ :QUIT, :INT, :TERM ]
 
     # Public: рабочие
-    WORKERS = {}
+    WORKERS = []
 
     # Public: кол-во рабочих
     NUM_WORKERS = 4
@@ -57,10 +57,8 @@ module CaseStudy
     def spawn_workers
       worker_num = 0
       while worker_num < NUM_WORKERS
-        # если уже есть то пропускаем
-        next if WORKERS.value?(worker_num)
 
-        worker = RequestHandler.new(@socket, worker_num)
+        worker = RequestHandler.new(@socket)
 
         # обработка в дочернем процессе
         pid = fork do
@@ -68,7 +66,7 @@ module CaseStudy
           exit
         end
 
-        WORKERS[pid] = worker
+        WORKERS << pid
 
         worker_num += 1
       end
@@ -78,6 +76,7 @@ module CaseStudy
     def trap_signals
       EXIT_SIGNALS.each do |signal|
         trap(signal) do
+          WORKERS.each{ |pid| Process.kill(signal, pid) }
           exit
         end
       end

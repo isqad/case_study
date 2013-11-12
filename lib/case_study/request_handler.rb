@@ -5,14 +5,11 @@ module CaseStudy
   class RequestHandler
     include Logger
 
-    # Public: порядковый номер рабочего
-    attr_accessor :number
-
     # Public: конструктор
     #
     # socket - TCPSocket
     # number - порядковый номер
-    def initialize(socket, number)
+    def initialize(socket)
 
       @socket = socket
 
@@ -23,8 +20,6 @@ module CaseStudy
       )
 
       @request = WEBrick::HTTPRequest.new(:Logger => self)
-
-      @number = number
 
       @public_dir = "#{File.dirname(__FILE__)}/../../public"
     end
@@ -38,7 +33,7 @@ module CaseStudy
 
         client = @socket.accept
 
-        client.sync = true
+        #client.sync = true
 
         begin
 
@@ -66,13 +61,6 @@ module CaseStudy
           client.close
         end
       end
-    end
-
-    # Public: рабочего можно сравнить
-    #
-    # val - значение, nil, Integer и пр.
-    def ==(val)
-      @number == val
     end
 
     private
