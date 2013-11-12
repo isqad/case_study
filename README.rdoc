@@ -2,4 +2,4 @@
 
 == To run:
 
-  $ ruby test.rb
+  $ bundle exec ruby server.rb

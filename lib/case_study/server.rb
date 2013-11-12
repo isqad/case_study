@@ -3,20 +3,19 @@
 require 'rubygems'
 require 'bundler/setup'
 
+require 'socket'
 require 'webrick'
 require 'sendfile'
 
-require './lib/bserver/patch'
-require './lib/bserver/logger'
-require './lib/bserver/server_socket'
-require './lib/bserver/request_handler'
+require './lib/case_study/patch'
+require './lib/case_study/logger'
+require './lib/case_study/request_handler'
 
 
 module CaseStudy
   # Public: класс отвечающий за запуск сервера
   # выбрана архитектура префоркинга
   class Server
-    include ServerSocket
     include Logger
 
     # Public: сигналы завершения
@@ -28,21 +27,22 @@ module CaseStudy
     # Public: кол-во рабочих
     NUM_WORKERS = 4
 
-    def initialize
-      $stdout.reopen("#{File.dirname(__FILE__)}/../../log/bserver_out.log")
-      $stderr.reopen("#{File.dirname(__FILE__)}/../../log/bserver_err.log")
+    def initialize(port=8080)
+      @socket = TCPServer.new(port)
+      @socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true)
+
+      $stdout.reopen("#{File.dirname(__FILE__)}/../../log/bserver_out.log", "a")
+      $stderr.reopen("#{File.dirname(__FILE__)}/../../log/bserver_err.log", "a")
     end
 
     # Public: запуск сервера
     #
-    # addr - String, путь к файлу unix сокета или ip:port
-    def run(addr)
+    # port - порт
+    def run(port=8080)
 
       trap_signals
 
       $0 = 'Bserver master'
-
-      @socket = create_socket(addr)
 
       spawn_workers
 

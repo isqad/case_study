@@ -5,15 +5,15 @@ module CaseStudy
   module Logger
 
     def log(ex)
-      $stdout.puts "[#{Process.pid}] [#{self.class.name}] #{format_exception(ex)}"
+      $stdout.puts "[#{Time.now.utc}] [#{Process.pid}] [#{self.class.name}] #{format_exception(ex)}"
     end
 
     def error(ex)
-      $stderr.puts "[#{Process.pid}] [#{self.class.name}] #{format_exception(ex)}"
+      $stderr.puts "[#{Time.now.utc}] [#{Process.pid}] [#{self.class.name}] #{format_exception(ex)}"
     end
 
     alias_method :debug, :log
-    alias_method :warn, :log
+    alias_method :warn, :error
     alias_method :info, :log
 
     def format_exception(ex)

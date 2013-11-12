@@ -1,4 +1,6 @@
-log/*.log
 .bundle/
 vendor/bundle/
+log/*
+public/*
 !.gitkeep
+!public/test.jpg

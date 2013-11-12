@@ -25,6 +25,8 @@ module CaseStudy
       @request = WEBrick::HTTPRequest.new(:Logger => self)
 
       @number = number
+
+      @public_dir = "#{File.dirname(__FILE__)}/../../public"
     end
 
     # Public: обработка входящего запроса
@@ -33,17 +35,26 @@ module CaseStudy
       $0 = "Bserver worker ##{@number}"
 
       while true
-        begin
-          # блокировка IO
-          client, addr = @socket.accept
 
-          client.sync = true
+        client = @socket.accept
+
+        client.sync = true
+
+        begin
 
           @request.parse client
 
-          @response.body = File.open('/tmp/index.html', 'r')
+          file = "#{@public_dir}#{@request.path}"
 
-        rescue WEBrick::HTTPStatus::EOFError, WEBrick::HTTPStatus::RequestTimeout => e
+          raise WEBrick::HTTPStatus::NotFound unless File.exists?(file)
+
+          @response.body = if File.directory?(file)
+            get_content_dir(file, @request.path)
+          else
+            File.open(file, "r")
+          end
+
+        rescue WEBrick::HTTPStatus::Status, WEBrick::HTTPStatus::EOFError, WEBrick::HTTPStatus::RequestTimeout => e
           # Установить ошибку в response
           @response.set_error(e)
         rescue => e
@@ -62,6 +73,43 @@ module CaseStudy
     # val - значение, nil, Integer и пр.
     def ==(val)
       @number == val
+    end
+
+    private
+    # Internal: список файлов в директории
+    # возвращает html
+    #
+    # directory - String, абсолютный путь
+    def get_content_dir(directory, relative)
+      output = <<-_html_
+<!doctype html>
+<html>
+  <head>
+    <title>#{relative}</title>
+  </head>
+<body>
+  <h3>#{relative}</h3>
+  <ul>
+    <li>
+_html_
+      files = Dir.entries(directory).select{ |entry| entry != '.' && entry != '..' }
+
+      files.map! do |f|
+        path = relative == '/' ? f : "#{relative}/#{f}"
+        icon = File.directory?(directory + '/' + f) ? '<img src="/folder.png">' : ''
+
+        "<a href=\"#{path}\">#{icon} #{f}</a>"
+      end
+
+      output += files.join('</li><li>')
+
+      output += <<-_html_
+    </li>
+  </ul>
+  </body>
+</html>
+_html_
+      output
     end
 
   end
