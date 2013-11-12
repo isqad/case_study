@@ -26,8 +26,8 @@ module CaseStudy
 
       @request = WEBrick::HTTPRequest.new(:Logger => self)
 
-      $stdout.reopen("#{File.dirname(__FILE__)}/../../log/bserver_out.log")
-      $stderr.reopen("#{File.dirname(__FILE__)}/../../log/bserver_err.log")
+      $stdout.reopen("#{File.dirname(__FILE__)}/../../log/bserver_out.log", "a")
+      $stderr.reopen("#{File.dirname(__FILE__)}/../../log/bserver_err.log", "a")
     end
 
     # Public: запуск сервера

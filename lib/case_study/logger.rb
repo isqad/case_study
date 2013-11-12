@@ -5,11 +5,11 @@ module CaseStudy
   module Logger
 
     def log(ex)
-      $stdout.puts "[#{Process.pid}] [#{self.class.name}] #{format_exception(ex)}"
+      $stdout.puts "[#{Time.now.utc}] [#{Process.pid}] [#{self.class.name}] #{format_exception(ex)}"
     end
 
     def error(ex)
-      $stderr.puts "[#{Process.pid}] [#{self.class.name}] #{format_exception(ex)}"
+      $stderr.puts "[#{Time.now.utc}] [#{Process.pid}] [#{self.class.name}] #{format_exception(ex)}"
     end
 
     alias_method :debug, :log
@@ -18,7 +18,7 @@ module CaseStudy
 
     def format_exception(ex)
       if ex.is_a?(Exception)
-        "#{arg.class}: #{arg.message}\n\t" <<
+        "#{ex.class}: #{ex.message}\n\t" <<
         ex.backtrace.join("\n\t") << "\n"
       elsif ex.respond_to?(:to_str)
         ex.to_str
