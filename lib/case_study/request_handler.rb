@@ -15,34 +15,22 @@ module CaseStudy
 
     # Public: обработка входящего запроса
     def handle
+      client = @socket.accept
 
-      $0 = "Bserver worker [#{Process.pid}]"
+      client.sync = true
 
-      while true
+      begin
+        @request.parse(client)
 
-        client = @socket.accept
+        path = "#{@response.public_dir}#{@request.path}"
 
-        #client.sync = true
+        raise '404 Not Found' unless File.exists?(path)
 
-        begin
-
-          @request.parse(client)
-
-          path = "#{@response.public_dir}#{@request.path}"
-
-          raise '404 Not Found' unless File.exists?(path)
-
-          @response.resource = path
-
-        rescue => e
-          $stderr.puts "[#{Time.now.utc}] [#{Process.pid}] [#{self.class.name}]: #{e.message}\n#{e.backtrace.join("\n\t")}\n"
-          # Установить ошибку в response
-          @response.set_error(e)
-        ensure
-          # при любых обстоятельствах сервер должен ответить
-          @response.send_response(client)
-          client.close
-        end
+        @response.resource = path
+      rescue => e
+        @response.set_error(e)
+      ensure
+        @response.send_response(client)
       end
     end
 

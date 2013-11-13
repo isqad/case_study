@@ -52,16 +52,21 @@ module CaseStudy
 
       send_headers client
       send_body client
+    ensure
+      client.close
     end
 
     # Public: установка ответа об ошибке
     #
     # status_error - код ответа
     # exception - исключение
-    def set_error(exception)
+    def set_error(e)
+      backtrace = e.backtrace.join("\n\t")
+      message = e.message
+      time = Time.now.utc
 
-      @status_code = if CODE_ERRORS.include?(exception.message)
-        exception.message
+      @status_code = if CODE_ERRORS.include?(message)
+        message
       else
         '500 Internal Sever Error'
       end
@@ -74,14 +79,16 @@ module CaseStudy
   </HEAD>
   <BODY>
     <H1>#{@status_code}</H1>
-    #{exception.message}
+    #{message}
     <HR>
     <PRE>
-    #{exception.backtrace.join("\n\t")}#{"\n"}
+    #{backtrace}#{"\n"}
     </PRE>
   </BODY>
 </HTML>
       _html_
+
+      $stderr.puts "[#{time}] [#{Process.pid}]: #{message}\n#{backtrace}\n"
     end
 
     private
@@ -151,11 +158,16 @@ module CaseStudy
     <li>
       _html_
 
-      files = Dir.entries(directory).select{ |entry| entry != '.' && entry != '..' }
+      files = Dir.entries(directory).select do |entry|
+        entry != '.' && entry != '..'
+      end
 
       files.map! do |f|
         path = relative == '/' ? f : "#{relative}/#{f}"
-        icon = File.directory?(directory + '/' + f) ? '<img src="/folder.png">' : ''
+
+        if File.directory?(directory + '/' + f)
+          icon = '<img src="/folder.png">'
+        end
 
         "<a href=\"#{path}\">#{icon} #{f}</a>"
       end

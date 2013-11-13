@@ -32,7 +32,6 @@ module CaseStudy
       @socket = TCPServer.new(port)
       @socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true)
 
-      #$stdout.reopen("#{File.dirname(__FILE__)}/../../log/bserver_out.log", "a")
       $stderr.reopen("#{File.dirname(__FILE__)}/../../log/bserver_err.log", "a")
     end
 
@@ -63,7 +62,8 @@ module CaseStudy
 
         # обработка в дочернем процессе
         pid = fork do
-          worker.handle
+          $0 = "Bserver worker [#{Process.pid}]"
+          worker.handle while true
           exit
         end
 
