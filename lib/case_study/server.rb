@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+$LOAD_PATH.unshift File.expand_path(File.dirname(__FILE__))
+
 require 'rubygems'
 require 'bundler/setup'
 
@@ -7,9 +9,9 @@ require 'socket'
 require 'uri'
 require 'sendfile'
 
-require './lib/case_study/request'
-require './lib/case_study/response'
-require './lib/case_study/request_handler'
+require 'request'
+require 'response'
+require 'request_handler'
 
 
 module CaseStudy
