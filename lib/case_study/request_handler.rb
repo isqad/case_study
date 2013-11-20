@@ -22,9 +22,7 @@ module CaseStudy
       begin
         @request.parse(client)
 
-        path = "#{@response.public_dir}#{@request.path}"
-
-        raise '404 Not Found' unless File.exists?(path)
+        resource = Resource.create(@request.path)
 
         @response.resource = path
       rescue => e

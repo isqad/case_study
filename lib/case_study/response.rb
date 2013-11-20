@@ -13,12 +13,6 @@ module CaseStudy
     # Public: код ответа
     attr_accessor :status_code
 
-    # Public: запрашиваемый ресурс
-    attr_writer :resource
-
-    # Public: рабочая директория
-    attr_accessor :public_dir
-
     # Public: коды ошибок
     CODE_ERRORS = [
       '404 Not Found',
@@ -26,11 +20,8 @@ module CaseStudy
     ]
 
     def initialize
-      @public_dir = "#{File.dirname(__FILE__)}/../../public"
 
       @status_code = '200 OK'
-
-      @resource = "#{@public_dir}/"
 
       @body = ''
 
@@ -46,10 +37,7 @@ module CaseStudy
     #
     # client - socket клиентского соединения
     def send_response(client)
-      prepare_body
-
       prepare_headers
-
       send_headers client
       send_body client
     ensure
@@ -96,25 +84,19 @@ module CaseStudy
     # в зависимости от тела ответа
     def prepare_headers
       # Content-Length
-      unless @headers.has_key? 'Content-Length'
-        @headers['Content-Length'] = if @body.kind_of?(File)
-          @body.size
-        else
-          @body ? @body.to_s.bytesize : 0
-        end
-      end
+      @headers['Content-Length'] = @body.size unless @headers.has_key? 'Content-Length'
       # Content-Type
-      @headers['Content-Type'] = mime_type(@body) if @body.kind_of?(File)
+      @headers['Content-Type'] = @body.type
     end
 
     # Internal: подготавливает тело ответа
-    def prepare_body
-      if File.directory? @resource
-        set_dir_list(@resource)
-      else
-        @body = File.open(@resource, 'r')
-      end
-    end
+    #def prepare_body
+    #  if File.directory? @resource
+    #    set_dir_list(@resource)
+    #  else
+    #    @body = File.open(@resource, 'r')
+    #  end
+    #end
 
     # Internal: отправка заголовков
     #
@@ -131,70 +113,13 @@ module CaseStudy
     #
     # client - socket клиентского соединения
     def send_body(client)
-      if @body.kind_of?(File)
-        client.sendfile @body
+      if @body.content.kind_of?(File)
+        client.sendfile @body.content
       else
-        client << @body
+        client << @body.content
       end
     ensure
-      @body.close if @body.kind_of?(File)
-    end
-
-    # Internal: установка ответа списка файлов
-    #
-    # directory - String, абсолютный путь
-    def set_dir_list(directory)
-      relative = directory.gsub(@public_dir, '')
-
-      @body = <<-_html_
-<!doctype html>
-<html>
-  <head>
-    <title>#{relative}</title>
-  </head>
-<body>
-  <h3>#{relative}</h3>
-  <ul>
-    <li>
-      _html_
-
-      files = Dir.entries(directory).select do |entry|
-        entry != '.' && entry != '..'
-      end
-
-      files.map! do |f|
-        path = relative == '/' ? f : "#{relative}/#{f}"
-
-        if File.directory?(directory + '/' + f)
-          icon = '<img src="/folder.png">'
-        end
-
-        "<a href=\"#{path}\">#{icon} #{f}</a>"
-      end
-
-      @body << files.join('</li><li>')
-
-      @body << <<-_html_
-    </li>
-  </ul>
-  </body>
-</html>
-      _html_
-    end
-
-    # Internal: определяет mime-type файлов по их расширению
-    #
-    # file - файл
-    def mime_type(file)
-      case File.extname(file)
-      when '.ico'  then 'image/vnd.microsoft.icon'
-      when '.zip'  then 'application/zip'
-      when '.gz'   then 'application/x-gzip'
-      when '.html' then 'text/html'
-      when '.png'  then 'image/png'
-      else 'application/octet-stream'
-      end
-
+      @body.close
     end
 
   end
