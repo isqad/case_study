@@ -22,12 +22,12 @@ module CaseStudy
     # Public: сигналы завершения
     EXIT_SIGNALS = [ :QUIT, :INT, :TERM ]
 
-    # Public: рабочие
-    WORKERS = []
-
     # Public: кол-во рабочих
     NUM_WORKERS = 4
 
+    # Public: инициализация
+    #
+    # port - порт
     def initialize(port=8080)
       @socket = TCPServer.new(port)
       @socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true)
@@ -36,9 +36,7 @@ module CaseStudy
     end
 
     # Public: запуск сервера
-    #
-    # port - порт
-    def run(port=8080)
+    def run
 
       trap_signals
 
@@ -53,26 +51,19 @@ module CaseStudy
     end
 
     private
-    # Internal: обеспечение необходимого кол-ва рабочих
+    # Internal: префоркинг
     def spawn_workers
-      worker_num = 0
-      while worker_num < NUM_WORKERS
-
+      NUM_WORKERS.times do
         worker = RequestHandler.new(@socket)
 
         # обработка в дочернем процессе
-        pid = fork do
+        fork do
           $0 = "Bserver worker [#{Process.pid}]"
           worker.handle while true
           exit
         end
-
-        WORKERS << pid
-
-        worker_num += 1
       end
     end
-
 
     def trap_signals
       EXIT_SIGNALS.each do |signal|
@@ -81,7 +72,6 @@ module CaseStudy
         end
       end
     end
-
   end
 end
 
