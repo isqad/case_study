@@ -6,12 +6,17 @@ require 'rubygems'
 require 'bundler/setup'
 
 require 'socket'
-require 'uri'
-require 'sendfile'
+#require 'uri'
+#require 'sendfile'
 
-require 'request'
-require 'response'
-require 'request_handler'
+#require 'resource'
+#require 'html_resource'
+#require 'file_resource'
+
+require 'connection'
+#require 'http_request'
+#require 'http_response'
+require 'worker'
 
 
 module CaseStudy
@@ -32,7 +37,7 @@ module CaseStudy
       @socket = TCPServer.new(port)
       @socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true)
 
-      $stderr.reopen("#{File.dirname(__FILE__)}/../../log/bserver_err.log", "a")
+      #$stderr.reopen("#{File.dirname(__FILE__)}/../../log/bserver_err.log", "a")
     end
 
     # Public: запуск сервера
@@ -54,18 +59,17 @@ module CaseStudy
     # Internal: префоркинг
     def spawn_workers
       NUM_WORKERS.times do
-        worker = RequestHandler.new(@socket)
-
-        # обработка в дочернем процессе
         fork do
-          $0 = "Bserver worker [#{Process.pid}]"
-          worker.handle while true
+          Worker.new(@socket).handle
           exit
         end
       end
     end
 
     def trap_signals
+      trap(:CHLD) do
+        puts "Killed child"
+      end
       EXIT_SIGNALS.each do |signal|
         trap(signal) do
           exit
