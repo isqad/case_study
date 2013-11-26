@@ -20,7 +20,6 @@ module CaseStudy
     # обрабатывать остальные соединения в очереди
     def handle
       loop do
-        @queue.select!{ |fileno, conn| !conn.closed? }
 
         readable_clients, writable_clients = IO.select(read_ready + [@main_socket], write_ready)
 
@@ -51,11 +50,14 @@ module CaseStudy
             connection = @queue[socket.fileno]
             data = socket.read_nonblock(4096)
             connection.on_readable(data)
-            puts "[#{Process.pid}] Read data from socket:\r\n" + data + "\r\n==========================\r\n"
           end
         rescue Errno::EAGAIN
         rescue EOFError
           @queue.delete(socket.fileno)
+        rescue Errno::ECONNRESET
+          # Клиент разорвал соединение, закрываем сокет
+          @queue.delete(socket.fileno)
+          socket.close
         end
       end
     end

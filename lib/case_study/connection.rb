@@ -6,6 +6,7 @@ module CaseStudy
   # Пример использования:
   # client = socket.accept
   # io = Connection.new(client)
+  # TODO: реализовать тех. задание
   class Connection
     # Public: TCPSocket - объект соединения с клиентом
     attr_reader :client
@@ -17,7 +18,15 @@ module CaseStudy
       @client = client
 
       @request = ''
-      @response = ''
+
+      @headers = {
+          'Server' => 'CaseStudy Server',
+          'Date' => Time.now.utc,
+          'Connection' => 'Keep-Alive',
+          'Content-Type' => 'text/html; charset=utf-8'
+      }
+
+      @response = "HTTP/1.1 200 OK \x0D\x0A"
     end
 
     # Public: при получении данных из сокета, накапливаем их в @request
@@ -29,7 +38,7 @@ module CaseStudy
 
       if @request.end_with?("\x0D\x0A")
 
-        respond "HTTP/1.1 200 OK\x0D\x0A\x0D\x0AОтвечает процесс ##{Process.pid}!\nПривет, мир!!!\x0D\x0A"
+        respond "<p>Отвечает процесс ##{Process.pid}!\nПривет, мир!!!</p>"
         @request = ''
       end
     end
@@ -37,8 +46,7 @@ module CaseStudy
     # Public: обработка записи в клиент
     def on_writable
       bytes = client.write_nonblock @response
-      client.close if bytes == @response.bytesize # закрываем, если записали столько, сколько нужно
-      @response.slice! 0, bytes
+      @response = @response.byteslice(bytes..-1)
     end
 
     # Public: возвращает true, если готов для записи
@@ -46,15 +54,13 @@ module CaseStudy
       !(@response.empty?)
     end
 
-    # Public: возвращает true, если соединение закрыто
-    def closed?
-      client.closed?
-    end
-
     private
     def respond(message)
+      @headers['Content-Length'] = message.bytesize
+      @headers.each{ |key, value| @response << "#{key}: #{value} \x0D\x0A" }
+      @response << "\x0D\x0A"
       @response << message + "\x0D\x0A"
-      puts "[#{Process.pid}] Try respond:\r\n" + @response + "\r\n==========================\r\n"
+
       on_writable
     end
   end
