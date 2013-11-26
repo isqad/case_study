@@ -21,10 +21,9 @@ module CaseStudy
     def handle
       loop do
 
-        readable_clients, writable_clients = IO.select(read_ready + [@main_socket], write_ready)
+        readable_clients, writable_clients = IO.select(read_ready + [@main_socket])
 
         handle_read readable_clients
-        handle_write writable_clients
       end
     end
 
@@ -34,37 +33,25 @@ module CaseStudy
       @queue.values.map(&:client)
     end
 
-    # Internal: готовые к записи
-    def write_ready
-      @queue.values.select(&:writing?).map(&:client)
-    end
-
     # Internal: принимаем и читаем соединение
     def handle_read(clients)
       clients.each do |socket|
-        begin
-          if @main_socket == socket
-              client_socket = @main_socket.accept_nonblock
-              @queue[client_socket.fileno] = Connection.new(client_socket)
-          else
+        if @main_socket == socket
+            client_socket = @main_socket.accept
+            @queue[client_socket.fileno] = Connection.new(client_socket)
+        else
+          begin
             connection = @queue[socket.fileno]
-            data = socket.read_nonblock(4096)
+            data = socket.read_nonblock(1024)
+            puts "[#{Process.pid}] Received: " + data + "\r\n"
             connection.on_readable(data)
+            @queue.reject!{ |fileno, conn| conn.client.closed? }
+          rescue Errno::EAGAIN
+          rescue EOFError
+            @queue.delete(socket.fileno)
           end
-        rescue Errno::EAGAIN
-        rescue EOFError
-          @queue.delete(socket.fileno)
-        rescue Errno::ECONNRESET
-          # Клиент разорвал соединение, закрываем сокет
-          @queue.delete(socket.fileno)
-          socket.close
         end
       end
-    end
-
-    # Internal: отдаем остатки данных в сокет
-    def handle_write(clients)
-      clients.each{ |socket| @queue[socket.fileno].on_writable }
     end
 
   end

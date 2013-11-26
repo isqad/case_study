@@ -6,8 +6,8 @@ require 'rubygems'
 require 'bundler/setup'
 
 require 'socket'
-#require 'uri'
-#require 'sendfile'
+require 'uri'
+require 'sendfile'
 
 #require 'resource'
 #require 'html_resource'

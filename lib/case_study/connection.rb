@@ -11,6 +11,7 @@ module CaseStudy
     # Public: TCPSocket - объект соединения с клиентом
     attr_reader :client
 
+
     # Public: конструтор
     #
     # client - объект соединения с клиентом
@@ -19,14 +20,7 @@ module CaseStudy
 
       @request = ''
 
-      @headers = {
-          'Server' => 'CaseStudy Server',
-          'Date' => Time.now.utc,
-          'Connection' => 'Keep-Alive',
-          'Content-Type' => 'text/html; charset=utf-8'
-      }
-
-      @response = "HTTP/1.1 200 OK \x0D\x0A"
+      @response = HttpResponse.new
     end
 
     # Public: при получении данных из сокета, накапливаем их в @request
@@ -37,31 +31,23 @@ module CaseStudy
       @request << data
 
       if @request.end_with?("\x0D\x0A")
-
-        respond "<p>Отвечает процесс ##{Process.pid}!\nПривет, мир!!!</p>"
+        if /^(\S+)\s+(\S+)(?:\s+HTTP\/(\d\.\d)?)?\r?\n?/ =~ @request
+          path = @public_dir + URI($2).path
+          @response.body = "<h1>Success #{path}</h1>"
+        else
+          @response.body = '<h1>Bad request</h1>'
+        end
         @request = ''
+
+        respond
       end
     end
 
-    # Public: обработка записи в клиент
-    def on_writable
-      bytes = client.write_nonblock @response
-      @response = @response.byteslice(bytes..-1)
-    end
-
-    # Public: возвращает true, если готов для записи
-    def writing?
-      !(@response.empty?)
-    end
-
     private
-    def respond(message)
-      @headers['Content-Length'] = message.bytesize
-      @headers.each{ |key, value| @response << "#{key}: #{value} \x0D\x0A" }
-      @response << "\x0D\x0A"
-      @response << message + "\x0D\x0A"
-
-      on_writable
+    def respond
+      @response.send_to client
+    ensure
+      client.close
     end
   end
 end
