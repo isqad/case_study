@@ -1,0 +1,14 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN">
+<html>
+<HEAD>
+  <TITLE><%= @error.code %> <%= @error.status %></TITLE>
+</HEAD>
+<BODY>
+<H1><%= @error.code %> <%= @error.status %></H1>
+<%= @error.message %>
+<HR>
+    <PRE>
+    <%= @error.backtrace %>
+    </PRE>
+</BODY>
+</HTML>

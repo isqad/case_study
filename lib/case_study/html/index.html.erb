@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <title><%= @path %></title>
+</head>
+<body>
+<h3><%= @path %></h3>
+<ul>
+  <li>
+    <% files = Dir.entries(@absolute_path).select{ |e| e != '.' && e != '..' } %>
+
+    <%= files.map do |f|
+      p = @path == '/' ? f : "#{@path}/#{f}"
+      icon = File.directory?(@absolute_path + '/' + f) ? '<img src="/folder.png">' : ''
+      "<a href=\"#{p}\">#{icon} #{f}</a>"
+      end.join('</li><li>')
+    %>
+  </li>
+</ul>
+</body>
+</html>
