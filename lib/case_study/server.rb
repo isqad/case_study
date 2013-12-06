@@ -5,17 +5,21 @@ $LOAD_PATH.unshift File.expand_path(File.dirname(__FILE__))
 require 'rubygems'
 require 'bundler/setup'
 
+require 'erb'
 require 'socket'
 require 'uri'
 require 'sendfile'
 
-#require 'resource'
-#require 'html_resource'
-#require 'file_resource'
+require 'http_status'
+
+require 'resource'
+
+require 'html_resource'
+require 'error_resource'
+require 'file_resource'
 
 require 'connection'
-#require 'http_request'
-#require 'http_response'
+require 'http_response'
 require 'worker'
 
 module CaseStudy
@@ -32,7 +36,7 @@ module CaseStudy
     # Public: инициализация
     #
     # port - порт
-    def initialize(port=8080)
+    def initialize port=8080
       @socket = TCPServer.new(port)
       @socket.setsockopt(Socket::SOL_SOCKET, Socket::SO_REUSEADDR, true)
 
